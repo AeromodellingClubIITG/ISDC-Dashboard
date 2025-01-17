@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Sensor Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div>
+                <h3>Live Video Feed</h3>
+                <img src="/video_feed/" width="640" height="480" />
+            </div>
+            <div>
+                <h3>Temperature vs Time</h3>
+                <canvas id="tempTimeChart" width="640" height="480"></canvas>
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <h3>Temperature vs Altitude</h3>
+                <canvas id="tempAltChart" width="640" height="480"></canvas>
+            </div>
+            <div>
+                <h3>Pressure vs Time</h3>
+                <canvas id="pressureTimeChart" width="640" height="480"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tempTimeChart = new Chart(document.getElementById('tempTimeChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Temperature (°C)', data: [], borderColor: 'red', fill: false }] },
+            options: { responsive: true, scales: { x: { title: { display: true, text: 'Time' } }, y: { title: { display: true, text: 'Temperature (°C)' } } } }
+        });
+
+        const tempAltChart = new Chart(document.getElementById('tempAltChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Temperature (°C)', data: [], borderColor: 'blue', fill: false }] },
+            options: { responsive: true, scales: { x: { title: { display: true, text: 'Altitude (m)' } }, y: { title: { display: true, text: 'Temperature (°C)' } } } }
+        });
+
+        const pressureTimeChart = new Chart(document.getElementById('pressureTimeChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Pressure (Pa)', data: [], borderColor: 'green', fill: false }] },
+            options: { responsive: true, scales: { x: { title: { display: true, text: 'Time' } }, y: { title: { display: true, text: 'Pressure (Pa)' } } } }
+        });
+
+        function updateCharts() {
+            fetch('/get_sensor_data/')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(item => {
+                        tempTimeChart.data.labels.push(item.time);
+                        tempTimeChart.data.datasets[0].data.push(item.temperature);
+                        tempAltChart.data.labels.push(item.altitude);
+                        tempAltChart.data.datasets[0].data.push(item.temperature);
+                        pressureTimeChart.data.labels.push(item.time);
+                        pressureTimeChart.data.datasets[0].data.push(item.pressure);
+                    });
+
+                    tempTimeChart.update();
+                    tempAltChart.update();
+                    pressureTimeChart.update();
+                });
+        }
+
+        setInterval(updateCharts, 2000);
+    </script>
+</body>
+</html>
