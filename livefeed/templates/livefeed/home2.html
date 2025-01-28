@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Feed and Sensor Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div>
+                <h3>Live Video Feed</h3>
+                <img src="/video_feed/" width="640" height="480" />
+            </div>
+            <div>
+                <h3>Temperature vs Time</h3>
+                <canvas id="tempTimeChart" width="640" height="480"></canvas>
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <h3>Temperature vs Altitude</h3>
+                <canvas id="tempAltChart" width="640" height="480"></canvas>
+            </div>
+            <div>
+                <h3>Pressure vs Time</h3>
+                <canvas id="pressureTimeChart" width="640" height="480"></canvas>
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <h3>Pressure vs Altitude</h3>
+                <canvas id="pressureAltChart" width="640" height="480"></canvas>
+            </div>
+            <div>
+                <h3>Altitude vs Time</h3>
+                <canvas id="altTimeChart" width="640" height="480"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        const tempTimeChart = new Chart(document.getElementById('tempTimeChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Temperature (°C)', data: [], borderColor: 'red', fill: false }] },
+            options: { responsive: true, scales: { x: { title: { display: true, text: 'Time' } }, y: { title: { display: true, text: 'Temperature (°C)' } } } }
+        });
+
+        const tempAltChart = new Chart(document.getElementById('tempAltChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Temperature (°C)', data: [], borderColor: 'blue', fill: false }] },
+            options: { responsive: true, scales: { x: { title: { display: true, text: 'Altitude (m)' } }, y: { title: { display: true, text: 'Temperature (°C)' } } } }
+        });
+
+        const pressureTimeChart = new Chart(document.getElementById('pressureTimeChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Pressure (Pa)', data: [], borderColor: 'green', fill: false }] },
+            options: { responsive: true, scales: { x: { title: { display: true, text: 'Time' } }, y: { title: { display: true, text: 'Pressure (Pa)' } } } }
+        });
+
+        const pressureAltChart = new Chart(document.getElementById('pressureAltChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Pressure (Pa)', data: [], borderColor: 'orange', fill: false }] },
+            options: { responsive: true, scales: { x: { title: { display: true, text: 'Altitude (m)' } }, y: { title: { display: true, text: 'Pressure (Pa)' } } } }
+        });
+
+        const altTimeChart = new Chart(document.getElementById('altTimeChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Altitude (m)', data: [], borderColor: 'purple', fill: false }] },
+            options: { responsive: true, scales: { x: { title: { display: true, text: 'Time' } }, y: { title: { display: true, text: 'Altitude (m)' } } } }
+        });
+
+        // Fetch sensor data and update charts
+        function updateCharts() {
+            fetch('/get_sensor_data/')
+                .then(response => response.json())
+                .then(data => {
+                    const times = data.map(item => item.time);
+                    const temperatures = data.map(item => item.temperature);
+                    const pressures = data.map(item => item.pressure);
+                    const altitudes = data.map(item => item.altitude);
+
+                    // Update Temperature vs Time
+                    tempTimeChart.data.labels = times;
+                    tempTimeChart.data.datasets[0].data = temperatures;
+                    tempTimeChart.update();
+
+                    // Update Temperature vs Altitude
+                    tempAltChart.data.labels = altitudes;
+                    tempAltChart.data.datasets[0].data = temperatures;
+                    tempAltChart.update();
+
+                    // Update Pressure vs Time
+                    pressureTimeChart.data.labels = times;
+                    pressureTimeChart.data.datasets[0].data = pressures;
+                    pressureTimeChart.update();
+
+                    // Update Pressure vs Altitude
+                    pressureAltChart.data.labels = altitudes;
+                    pressureAltChart.data.datasets[0].data = pressures;
+                    pressureAltChart.update();
+
+                    // Update Altitude vs Time
+                    altTimeChart.data.labels = times;
+                    altTimeChart.data.datasets[0].data = altitudes;
+                    altTimeChart.update();
+                });
+        }
+
+        // Fetch data every 2 seconds
+        setInterval(updateCharts, 2000);
+    </script>
+</body>
+</html>
